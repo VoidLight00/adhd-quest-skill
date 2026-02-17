@@ -68,16 +68,89 @@ ADHD 관리를 RPG로 만든 텔레그램 비서. 모든 조작은 인라인 버
 - `🟢 이지 (×1.0)` | `🟡 노말 (×1.5)` | `🔴 하드 (×2.0)`
 
 ### Step 6: 설정 저장 & 크론 등록
+
+**6-1. config 저장**
 - `adhd-config.json`을 workspace에 저장 (구조는 `references/adhd-config-example.json` 참고)
-- 크론잡 등록:
-  - 아침 크론: `{morning_time}` (Asia/Seoul) — 아침 퀘스트 발송
-  - 저녁 크론: `{evening_time}` (Asia/Seoul) — 감정 체크 + 감사일기 + 완료율 리포트
-  - 일요일 크론: `매주 일요일 21:00` — 주간 리포트 생성 + 저장
-- 완료 메시지:
+
+**6-2. 크론잡 등록 (cron tool 사용)**
+
+아침 크론 등록:
+```json
+{
+  "action": "add",
+  "job": {
+    "name": "ADHD Quest 아침",
+    "schedule": { "kind": "cron", "expr": "0 {morning_hour} * * *", "tz": "Asia/Seoul" },
+    "sessionTarget": "isolated",
+    "payload": {
+      "kind": "agentTurn",
+      "message": "[ADHD Quest 아침 크론] workspace/adhd-config.json을 읽어서 오늘의 아침 퀘스트를 텔레그램 인라인 버튼으로 발송해줘.\n\n규칙:\n1. lastQuestDate가 오늘이면 스킵\n2. 스트릭 계산 (어제와 비교)\n3. config의 quests.morning 항목을 인라인 버튼으로 발송\n4. 버튼 callback_data 형식: quest_{id}_{YYYYMMDD}\n5. 마지막 줄에 '😴 오늘은 여기까지' 버튼 추가\n6. 메시지에 레벨, 칭호, 스트릭 표시\n7. message tool의 buttons 파라미터로 인라인 버튼 발송"
+    },
+    "delivery": { "mode": "none" }
+  }
+}
 ```
-"🎮 설정 완료! Lv.1 견습생 {name}님의 모험이 시작됩니다!"
+
+저녁 크론 등록:
+```json
+{
+  "action": "add",
+  "job": {
+    "name": "ADHD Quest 저녁",
+    "schedule": { "kind": "cron", "expr": "0 {evening_hour} * * *", "tz": "Asia/Seoul" },
+    "sessionTarget": "isolated",
+    "payload": {
+      "kind": "agentTurn",
+      "message": "[ADHD Quest 저녁 크론] workspace/adhd-config.json을 읽고 저녁 루틴 실행:\n\n1. 감정 체크인: 감정 이모지 버튼 발송 (😢1~2 / 😕3~4 / 😐5~6 / 😊7~8 / 😄9~10)\n2. 감사일기: '오늘 감사한 것 하나만' 질문\n3. 오늘 완료율 리포트 발송 (완료 퀘스트 수, 획득 XP, 레벨 진행)\n4. 감정/감사 응답은 {savePath}/일지/ 하위에 마크다운으로 자동 저장\n5. config의 xp, streak, history 업데이트\n6. message tool의 buttons로 인라인 버튼 발송\n7. delivery는 none (직접 message tool로 발송)"
+    },
+    "delivery": { "mode": "none" }
+  }
+}
+```
+
+일요일 주간 리포트 크론:
+```json
+{
+  "action": "add",
+  "job": {
+    "name": "ADHD Quest 주간리포트",
+    "schedule": { "kind": "cron", "expr": "0 21 * * 0", "tz": "Asia/Seoul" },
+    "sessionTarget": "isolated",
+    "payload": {
+      "kind": "agentTurn",
+      "message": "[ADHD Quest 주간리포트] workspace/adhd-config.json과 이번 주 history를 읽고:\n\n1. 일별 완료율, 감정 변화, 감사 모음, 총 XP 집계\n2. {savePath}/일지/주간리포트/YYYY-Www.md에 저장\n3. 텔레그램으로 요약 발송 (완료율, 레벨 변화, 스트릭, 잘한 점)\n4. message tool의 buttons로 [📈 자세히 보기] [🎁 보상 확인] 버튼 추가"
+    },
+    "delivery": { "mode": "none" }
+  }
+}
+```
+
+**6-3. 완료 메시지**
+```
+"🎮 설정 완료! Lv.1 🌱 견습생 {name}님의 모험이 시작됩니다!"
 "내일 아침 {morning_time}에 첫 퀘스트를 보내드릴게요 ⚔️"
+"크론잡 3개 등록 완료: 아침({morning_time}) / 저녁({evening_time}) / 주간(일요일 21:00)"
 ```
+
+---
+
+## 버튼 콜백 처리 (메인 세션)
+
+사용자가 인라인 버튼을 누르면 메인 세션으로 callback_data가 들어온다.
+이 스킬이 설치되어 있으면 메인 세션이 자동으로 참조한다.
+
+### callback_data 규칙
+- 퀘스트 완료: `quest_{id}_{YYYYMMDD}` (예: `quest_water_20260218`)
+- 감정 체크: `emotion_{score}_{YYYYMMDD}` (예: `emotion_8_20260218`)
+- 오늘 패스: `quest_skip_{YYYYMMDD}`
+
+### 콜백 처리 흐름
+1. callback_data 파싱 → 날짜, 퀘스트 ID 확인
+2. `adhd-config.json` 읽기
+3. 해당 퀘스트 완료 처리 + XP 계산 (난이도 배율 적용)
+4. 레벨업 체크 → 레벨업 시 축하 메시지
+5. config 업데이트 (xp, level, streak, lastQuestDate, history)
+6. 응답: "✅ {퀘스트명} 완료! +{xp} XP | Lv.{level} {title} ({current}/{next} XP)"
 
 ---
 
