@@ -91,17 +91,32 @@ Lv.3 전사 → Lv.4 까지 27 XP 남음
 
 ### 설치 방법
 
+**방법 1: 링크 던지기 (가장 쉬움) 🔥**
+
+OpenClaw 봇에게 이 메시지를 보내세요:
+
+```
+https://github.com/VoidLight00/adhd-quest-skill 이 스킬 설치해줘
+```
+
+봇이 알아서 클론 + 스킬 등록 + 온보딩까지 해줍니다!
+
+**방법 2: 수동 설치**
+
 ```bash
 # 1. 클론
+cd ~/projects  # 또는 원하는 경로
 git clone https://github.com/VoidLight00/adhd-quest-skill.git
 
-# 2. OpenClaw 스킬 디렉토리에 심링크
-ln -s $(pwd)/adhd-quest-skill/SKILL.md ~/.openclaw/workspace/skills/adhd-quest.md
+# 2. OpenClaw 스킬 디렉토리에 등록
+mkdir -p ~/.openclaw/workspace/skills/adhd-quest
+ln -sf $(pwd)/adhd-quest-skill/SKILL.md ~/.openclaw/workspace/skills/adhd-quest/SKILL.md
+ln -sf $(pwd)/adhd-quest-skill/references ~/.openclaw/workspace/skills/adhd-quest/references
 ```
 
 ### 첫 실행
 
-OpenClaw에게 말하세요:
+설치 후 OpenClaw에게 말하세요:
 
 ```
 "ADHD 퀘스트 시작해줘"
