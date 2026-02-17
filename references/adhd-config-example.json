@@ -1,0 +1,26 @@
+{
+  "name": "현",
+  "level": 1,
+  "xp": 0,
+  "streak": 0,
+  "lastQuestDate": null,
+  "savePath": "/Users/현/Documents/MyVault",
+  "quests": {
+    "morning": ["water", "meds", "plan"],
+    "health": ["exercise"],
+    "growth": ["reading"],
+    "evening": ["emotion", "gratitude", "tomorrow"]
+  },
+  "schedule": {
+    "morning": "08:00",
+    "evening": "21:00"
+  },
+  "difficulty": "easy",
+  "titles": {
+    "1": "견습생",
+    "3": "전사",
+    "5": "마스터",
+    "10": "전설"
+  },
+  "history": []
+}
