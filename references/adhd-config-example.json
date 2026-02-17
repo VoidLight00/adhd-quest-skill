@@ -16,11 +16,25 @@
     "evening": "21:00"
   },
   "difficulty": "easy",
-  "titles": {
-    "1": "견습생",
-    "3": "전사",
-    "5": "마스터",
-    "10": "전설"
+  "difficultyMultiplier": {
+    "easy": 1.0,
+    "normal": 1.3,
+    "hard": 1.6
+  },
+  "levels": {
+    "1": { "title": "🌱 견습생", "xpRequired": 0 },
+    "2": { "title": "🌿 수련생", "xpRequired": 200 },
+    "3": { "title": "⚔️ 전사", "xpRequired": 600 },
+    "4": { "title": "🔥 정예 전사", "xpRequired": 1500 },
+    "5": { "title": "🛡️ 마스터", "xpRequired": 3500 },
+    "7": { "title": "🌟 그랜드마스터", "xpRequired": 8000 },
+    "10": { "title": "🏆 전설", "xpRequired": 20000 }
+  },
+  "streakBonus": {
+    "3": 30,
+    "7": 70,
+    "14": 150,
+    "30": 500
   },
   "history": []
 }
