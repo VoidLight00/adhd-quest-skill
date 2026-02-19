@@ -5,6 +5,8 @@
   "streak": 0,
   "lastQuestDate": null,
   "savePath": "/Users/현/Documents/MyVault",
+  "journalRoot": "ADHD-Quest",
+  "useObsidian": true,
   "quests": {
     "morning": ["water", "meds", "plan"],
     "health": ["exercise"],
@@ -13,7 +15,8 @@
   },
   "schedule": {
     "morning": "08:00",
-    "evening": "21:00"
+    "evening": "21:00",
+    "weeklyReport": "sunday-21:00"
   },
   "difficulty": "easy",
   "difficultyMultiplier": {
@@ -36,5 +39,6 @@
     "14": 150,
     "30": 500
   },
-  "history": []
+  "history": [],
+  "monthlyStats": {}
 }

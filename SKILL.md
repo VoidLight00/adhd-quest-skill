@@ -21,7 +21,7 @@ ADHD 관리를 RPG로 만든 텔레그램 비서. 모든 조작은 인라인 버
 ```
 - 사용자가 텍스트로 입력 → `name`에 저장
 
-### Step 2: 저장 경로
+### Step 2: 저장 경로 (Obsidian 연동)
 ```
 "일지를 어디에 저장할까요?"
 ```
@@ -29,6 +29,43 @@ ADHD 관리를 RPG로 만든 텔레그램 비서. 모든 조작은 인라인 버
 - `📓 Obsidian Vault` → Vault 경로 입력 요청
 - `📁 Documents` → `~/Documents/ADHDQuest`
 - `✏️ 직접 입력`
+
+**Obsidian Vault 선택 시:**
+```
+"Obsidian Vault 경로를 알려주세요."
+"예: /Users/이름/Documents/MyVault"
+```
+→ 경로 입력 후 존재 확인 (`ls` 체크)
+→ `useObsidian: true`, `savePath`에 Vault 경로 저장
+→ `journalRoot` 기본값: `"ADHD-Quest"` (Vault 내 루트 폴더명)
+
+```
+"📓 Vault 확인 완료! ADHD-Quest 폴더를 자동 생성할게요."
+"Obsidian에서 바로 볼 수 있어요 ✨"
+```
+
+**자동 생성되는 Vault 구조:**
+```
+{Vault}/
+└── ADHD-Quest/
+    ├── 📊 대시보드.md          ← 통계 허브 (dataview 쿼리)
+    ├── 일일일지/
+    │   └── 2026-02-19.md      ← 하루 통합본
+    ├── 감정일기/
+    │   └── 2026-02-19.md
+    ├── 감사일기/
+    │   └── 2026-02-19.md
+    ├── 두뇌덤프/
+    │   └── 2026-02-19.md
+    ├── 주간리포트/
+    │   └── 2026-W08.md
+    ├── 월간리포트/
+    │   └── 2026-02.md
+    └── 템플릿/
+        ├── 일일일지-템플릿.md
+        ├── 감정일기-템플릿.md
+        └── 감사일기-템플릿.md
+```
 
 ### Step 3: 퀘스트 선택
 ```
@@ -101,12 +138,16 @@ ADHD 관리를 RPG로 만든 텔레그램 비서. 모든 조작은 인라인 버
     "sessionTarget": "isolated",
     "payload": {
       "kind": "agentTurn",
-      "message": "[ADHD Quest 저녁 크론] workspace/adhd-config.json을 읽고 저녁 루틴 실행:\n\n1. 감정 체크인: 감정 이모지 버튼 발송 (😢1~2 / 😕3~4 / 😐5~6 / 😊7~8 / 😄9~10)\n2. 감사일기: '오늘 감사한 것 하나만' 질문\n3. 오늘 완료율 리포트 발송 (완료 퀘스트 수, 획득 XP, 레벨 진행)\n4. 감정/감사 응답은 {savePath}/일지/ 하위에 마크다운으로 자동 저장\n5. config의 xp, streak, history 업데이트\n6. message tool의 buttons로 인라인 버튼 발송\n7. delivery는 none (직접 message tool로 발송)"
+      "message": "[ADHD Quest 저녁 크론] workspace/adhd-config.json을 읽고 저녁 루틴 실행:\n\n1. 감정 체크인: 감정 이모지 버튼 발송 (😢1~2 / 😕3~4 / 😐5~6 / 😊7~8 / 😄9~10)\n2. 감사일기: '오늘 감사한 것 하나만' 질문\n3. 오늘 완료율 리포트 발송 (완료 퀘스트 수, 획득 XP, 레벨 진행)\n4. 감정/감사 응답은 {savePath}/ 하위 폴더(감정일기, 감사일기, 일일일지)에 마크다운으로 자동 저장\n5. config의 xp, streak, history 업데이트\n6. message tool의 buttons로 인라인 버튼 발송\n7. delivery는 none (직접 message tool로 발송)"
     },
     "delivery": { "mode": "none" }
   }
 }
 ```
+
+저녁 크론 메시지에 추가 지시:
+- `8. 일일 종합일지 생성: {savePath}/일일일지/YYYY-MM-DD.md에 오늘 데이터 통합 저장 (frontmatter 포함: date, emotion, emotion_score, quests_done, completion, xp_earned, streak, tags)`
+- `9. config의 monthlyStats 업데이트 (요일별 누적 completion, emotion 평균)`
 
 일요일 주간 리포트 크론:
 ```json
@@ -118,18 +159,47 @@ ADHD 관리를 RPG로 만든 텔레그램 비서. 모든 조작은 인라인 버
     "sessionTarget": "isolated",
     "payload": {
       "kind": "agentTurn",
-      "message": "[ADHD Quest 주간리포트] workspace/adhd-config.json과 이번 주 history를 읽고:\n\n1. 일별 완료율, 감정 변화, 감사 모음, 총 XP 집계\n2. {savePath}/일지/주간리포트/YYYY-Www.md에 저장\n3. 텔레그램으로 요약 발송 (완료율, 레벨 변화, 스트릭, 잘한 점)\n4. message tool의 buttons로 [📈 자세히 보기] [🎁 보상 확인] 버튼 추가"
+      "message": "[ADHD Quest 주간리포트] workspace/adhd-config.json과 이번 주 history를 읽고:\n\n1. 일별 완료율, 감정 변화, 감사 모음, 총 XP 집계\n2. {savePath}/주간리포트/YYYY-Www.md에 저장\n3. 텔레그램으로 요약 발송 (완료율, 레벨 변화, 스트릭, 잘한 점)\n4. message tool의 buttons로 [📈 자세히 보기] [🎁 보상 확인] 버튼 추가"
     },
     "delivery": { "mode": "none" }
   }
 }
 ```
 
+월간 리포트 크론 등록:
+```json
+{
+  "action": "add",
+  "job": {
+    "name": "ADHD Quest 월간리포트",
+    "schedule": { "kind": "cron", "expr": "0 21 1 * *", "tz": "Asia/Seoul" },
+    "sessionTarget": "isolated",
+    "payload": {
+      "kind": "agentTurn",
+      "message": "[ADHD Quest 월간리포트] workspace/adhd-config.json과 지난달 history, monthlyStats를 읽고:\n\n1. 요일별 평균 완료율/감정 집계\n2. 감정 월간 추이 (텍스트 그래프)\n3. 패턴 발견 (최고/최저 요일, 수면 상관관계 등)\n4. 감사 하이라이트 AI 선별 (3~5개)\n5. {savePath}/월간리포트/YYYY-MM.md에 저장 (frontmatter: month, avg_completion, avg_emotion, total_xp, best_day, worst_day)\n6. 텔레그램으로 요약 발송\n7. 대시보드.md 현재 상태 업데이트"
+    },
+    "delivery": { "mode": "none" }
+  }
+}
+```
+
+Obsidian 대시보드 생성 (useObsidian: true일 때):
+- `{savePath}/📊 대시보드.md` 자동 생성
+- dataview 플러그인 미설치 시 안내 메시지 발송
+
+템플릿 폴더 생성:
+- `{savePath}/템플릿/일일일지-템플릿.md`
+- `{savePath}/템플릿/감정일기-템플릿.md`
+- `{savePath}/템플릿/감사일기-템플릿.md`
+
 **6-3. 완료 메시지**
 ```
 "🎮 설정 완료! Lv.1 🌱 견습생 {name}님의 모험이 시작됩니다!"
 "내일 아침 {morning_time}에 첫 퀘스트를 보내드릴게요 ⚔️"
-"크론잡 3개 등록 완료: 아침({morning_time}) / 저녁({evening_time}) / 주간(일요일 21:00)"
+"크론잡 4개 등록 완료:"
+"  ☀️ 아침({morning_time}) / 🌙 저녁({evening_time})"
+"  📊 주간(일요일 21:00) / 📈 월간(매월 1일 21:00)"
+"📓 Obsidian에서 ADHD-Quest 폴더를 확인해보세요!"
 ```
 
 ---
@@ -216,7 +286,7 @@ ADHD 관리를 RPG로 만든 텔레그램 비서. 모든 조작은 인라인 버
    - 감사일기 모음
    - 총 획득 XP
    - 스트릭 현황
-2. 주간리포트 파일 저장: `{savePath}/일지/주간리포트/YYYY-Www.md`
+2. 주간리포트 파일 저장: `{savePath}/주간리포트/YYYY-Www.md`
 3. 텔레그램으로 요약 발송
 4. 잘한 점 1~2개 하이라이트 + 격려 메시지
 
@@ -281,8 +351,62 @@ ADHD 관리를 RPG로 만든 텔레그램 비서. 모든 조작은 인라인 버
 
 ## 자동 저장 일지
 
+모든 일지는 Obsidian dataview 호환 frontmatter를 포함한다.
+`{savePath}` = Obsidian 시 `{Vault}/{journalRoot}`, 아니면 지정 경로.
+
+---
+
+### 일일 종합일지 (하루 통합본)
+경로: `{savePath}/일일일지/YYYY-MM-DD.md`
+
+저녁 크론 실행 시 자동 생성/업데이트. 그날의 모든 데이터를 한 파일에.
+
+```markdown
+---
+date: 2026-02-19
+day: 수요일
+emotion: 😊
+emotion_score: 8
+emotion_memo: "집중이 잘 됐다"
+gratitude: "커피가 맛있었다"
+quests_done: 4
+quests_total: 6
+completion: 67
+xp_earned: 75
+xp_total: 873
+level: 3
+title: "⚔️ 전사"
+streak: 12
+sleep_hours: 7
+tags: [adhd-quest, 일일일지]
+---
+
+# 📅 2026-02-19 수요일 | Lv.3 ⚔️ 전사
+
+## ⚔️ 퀘스트 (4/6 완료 · 67%)
+- ✅ 💧 물 마시기
+- ✅ 💊 약 복용
+- ✅ 📝 할 일 쪼개기
+- ✅ ⏰ 리마인더
+- ❌ 🌅 아침 루틴
+- ❌ 😴 수면 기록
+
+## 😊 감정 (8/10)
+집중이 잘 됐다
+
+## 🙏 감사
+커피가 맛있었다
+
+## 📊 XP
+- 오늘: +75 XP
+- 누적: 873 / 1,500 XP (Lv.4까지 627)
+- 🔥 스트릭: 12일째
+```
+
+---
+
 ### 감정일기
-경로: `{savePath}/일지/감정일기/YYYY-MM-DD.md`
+경로: `{savePath}/감정일기/YYYY-MM-DD.md`
 
 ```markdown
 ---
@@ -307,7 +431,7 @@ score: 8
 ```
 
 ### 감사일기
-경로: `{savePath}/일지/감사일기/YYYY-MM-DD.md`
+경로: `{savePath}/감사일기/YYYY-MM-DD.md`
 
 append 방식 (하루에 여러 번 가능):
 ```markdown
@@ -322,31 +446,51 @@ date: 2026-02-18
 ```
 
 ### 주간 리포트
-경로: `{savePath}/일지/주간리포트/YYYY-Www.md`
+경로: `{savePath}/주간리포트/YYYY-Www.md`
 
 ```markdown
 ---
 week: 2026-W08
 period: 2026-02-16 ~ 2026-02-22
+avg_completion: 78
+avg_emotion: 7.7
+total_xp: 320
+streak_max: 12
+tags: [adhd-quest, 주간리포트]
 ---
 
 # 📊 2026-W08 주간 리포트
 
 ## 완료율
-| 요일 | 완료 | 비율 |
-|------|------|------|
-| 월 | 4/6 | 67% |
-| 화 | 6/6 | 100% 🎉 |
-| ... | ... | ... |
-| **평균** | | **78%** |
+| 요일 | 완료 | 비율 | 감정 |
+|------|------|------|------|
+| 월 | 4/6 | 67% | 😊 8 |
+| 화 | 6/6 | 100% 🎉 | 😄 9 |
+| 수 | 3/6 | 50% | 😐 5 |
+| 목 | 5/6 | 83% | 😊 7 |
+| 금 | 5/6 | 83% | 😊 8 |
+| 토 | 6/6 | 100% 🎉 | 😄 9 |
+| 일 | 4/6 | 67% | 😊 8 |
+| **평균** | | **78%** | **7.7** |
 
-## 감정 변화
-월😊8 → 화😄9 → 수😐5 → 목😊7 → 금😊8 → 토😄9 → 일😊8
+## 감정 추이
+```
+10 ┤
+ 8 ┤  ●  ●           ●  ●  ●  ●
+ 6 ┤
+ 4 ┤        ●
+ 2 ┤
+   └──월──화──수──목──금──토──일
+```
 
 ## 감사 모음
 - 커피가 맛있었다
 - 친구가 연락해줘서 좋았다
 - ...
+
+## 패턴 분석
+- 🔍 **발견**: 수요일에 감정 하락 — 수면 부족과 연관 가능성
+- 💡 **제안**: 화요일 밤 수면 시간 확보 시도해보기
 
 ## 이번 주 잘한 점
 - 7일 스트릭 달성! 🔥
@@ -357,6 +501,117 @@ period: 2026-02-16 ~ 2026-02-22
 - 레벨: Lv.3 → Lv.4 (승급!)
 - 스트릭: 12일째
 ```
+
+---
+
+### 월간 리포트
+경로: `{savePath}/월간리포트/YYYY-MM.md`
+
+매월 1일 자동 생성 (크론 추가). 한 달간 축적된 데이터 종합 분석.
+
+```markdown
+---
+month: 2026-02
+days_tracked: 28
+avg_completion: 74
+avg_emotion: 7.2
+total_xp: 1280
+level_start: 2
+level_end: 4
+best_day: 화요일
+worst_day: 수요일
+tags: [adhd-quest, 월간리포트]
+---
+
+# 📈 2026년 2월 월간 리포트
+
+## 요일별 평균 완료율
+| 요일 | 평균 완료율 | 평균 감정 |
+|------|-----------|----------|
+| 월 | 72% | 7.1 |
+| 화 | 89% 🏆 | 8.2 |
+| 수 | 58% | 5.8 |
+| 목 | 78% | 7.5 |
+| 금 | 75% | 7.3 |
+| 토 | 82% | 8.0 |
+| 일 | 65% | 6.8 |
+
+## 감정 월간 추이
+```
+10 ┤
+ 8 ┤ ●●  ●●●● ●●  ●●●●● ●● ●●●
+ 6 ┤    ●      ●  ●
+ 4 ┤
+   └─1──5──10──15──20──25──28
+```
+
+## 패턴 발견
+- 🔍 **최고 요일**: 화요일 (완료율 89%, 감정 8.2)
+- 🔍 **최저 요일**: 수요일 (완료율 58%, 감정 5.8)
+- 🔍 **수면 상관**: 6시간 미만 수면 다음날 완료율 -23%
+- 💡 **제안**: 화요일 밤 수면 루틴 강화 → 수요일 개선 예상
+
+## 성장
+- 레벨: Lv.2 → Lv.4 (+2 레벨!)
+- 총 XP: +1,280
+- 최장 스트릭: 14일
+- 올클리어: 8회
+
+## 감사 하이라이트 (AI 선별)
+- "친구가 연락해줘서 좋았다"
+- "프로젝트 마감을 해냈다"
+- "날씨가 좋아서 산책했다"
+```
+
+---
+
+### 📊 대시보드 (Obsidian 전용)
+경로: `{savePath}/📊 대시보드.md`
+
+온보딩 시 자동 생성. Obsidian dataview 플러그인 활용.
+
+```markdown
+# 📊 ADHD Quest 대시보드
+
+## 현재 상태
+> [!info] Lv.{level} {title} · 🔥 {streak}일 스트릭
+> XP: {xp} / {next_xp} · 다음 레벨까지 {remaining}
+
+## 최근 7일 감정
+\```dataview
+TABLE emotion AS "😊", emotion_score AS "점수", completion + "%" AS "완료율"
+FROM "ADHD-Quest/일일일지"
+SORT date DESC
+LIMIT 7
+\```
+
+## 이번 달 완료율
+\```dataview
+TABLE completion + "%" AS "완료율", emotion AS "감정", xp_earned AS "XP"
+FROM "ADHD-Quest/일일일지"
+WHERE date >= date(sow)
+SORT date ASC
+\```
+
+## 감사일기 모음
+\```dataview
+LIST gratitude
+FROM "ADHD-Quest/일일일지"
+WHERE gratitude
+SORT date DESC
+LIMIT 10
+\```
+
+## 주간 리포트
+\```dataview
+TABLE avg_completion + "%" AS "완료율", avg_emotion AS "감정", total_xp AS "XP"
+FROM "ADHD-Quest/주간리포트"
+SORT week DESC
+LIMIT 4
+\```
+```
+
+> ⚠️ 대시보드는 Obsidian **dataview 플러그인** 필요. 없으면 설치 안내.
 
 ---
 
@@ -443,11 +698,22 @@ workspace 루트 (`~/.openclaw/workspace/adhd-config.json`)
 
 ### 일지 저장 위치
 사용자가 온보딩에서 선택한 `savePath` 하위:
-- `{savePath}/일지/감정일기/`
-- `{savePath}/일지/감사일기/`
-- `{savePath}/일지/주간리포트/`
+- `{savePath}/일일일지/` — 하루 통합본 (감정+퀘스트+감사+XP)
+- `{savePath}/감정일기/` — 감정 전용
+- `{savePath}/감사일기/` — 감사 전용 (append 방식)
+- `{savePath}/두뇌덤프/` — 두뇌 덤프 정리 결과
+- `{savePath}/주간리포트/` — 주간 통계
+- `{savePath}/월간리포트/` — 월간 패턴 분석
+- `{savePath}/📊 대시보드.md` — Obsidian dataview 허브
+- `{savePath}/템플릿/` — 일지 템플릿
 
 폴더가 없으면 자동 생성 (`mkdir -p`).
+
+### Obsidian 연동 시 추가 기능
+- **frontmatter 통일**: 모든 일지에 dataview 호환 YAML 포함
+- **대시보드**: dataview 쿼리로 감정 추이, 완료율, 감사 모음 자동 표시
+- **월간 패턴**: 요일별 평균, 수면-감정 상관관계, AI 인사이트
+- **태그 시스템**: `#adhd-quest`, `#일일일지`, `#주간리포트` 등 자동 태깅
 
 ### 백업
 `adhd-config.json`의 `history` 배열에 일별 기록이 축적된다.
