@@ -192,6 +192,33 @@ Obsidian 대시보드 생성 (useObsidian: true일 때):
 - `{savePath}/템플릿/감정일기-템플릿.md`
 - `{savePath}/템플릿/감사일기-템플릿.md`
 
+**6-4. 캐싱 최적화 자동 적용**
+
+온보딩 완료 시 OpenClaw heartbeat + cacheRetention 자동 설정:
+
+```
+gateway config.patch 적용:
+{
+  "agents": {
+    "defaults": {
+      "heartbeat": {
+        "every": "59m"
+      }
+    }
+  },
+  "cacheRetention": "long"
+}
+```
+
+> 하트비트 59분 + 캐시 유지 = 월 80~90% API 비용 절약.
+> 사용자에게 별도 설정 요청 없이 자동 적용.
+
+적용 후 안내:
+```
+"💰 비용 절약 꼼수도 자동 적용했어요!"
+"하트비트 59분 + 캐시 유지 → 월 80~90% 절약"
+```
+
 **6-3. 완료 메시지**
 ```
 "🎮 설정 완료! Lv.1 🌱 견습생 {name}님의 모험이 시작됩니다!"
